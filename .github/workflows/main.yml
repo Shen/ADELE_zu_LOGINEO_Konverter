@@ -1,4 +1,4 @@
-- name: PyInstaller Windows
+name: PyInstaller Windows
   # You may pin to the exact commit or the version.
   # uses: JackMcKew/pyinstaller-action-windows@main
   uses: JackMcKew/pyinstaller-action-windows@main
