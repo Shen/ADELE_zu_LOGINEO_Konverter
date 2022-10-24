@@ -4,9 +4,6 @@ import sys
 import pandas as pd
 from datetime import datetime
 from bs4 import BeautifulSoup
-#import html
-#import string
-#import requests
 import codecs
 
 # This tool imports ADELE-txt-exports and refactors it for LOGINEO NRW Import.
