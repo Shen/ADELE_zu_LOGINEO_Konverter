@@ -1,0 +1,41 @@
+LAA_ADELE-zu-LOGINEO-Import-Konverter CHANGELOG
+-----------------
+V 1.6 (benötigt config.xml-Version 1.3 und höher)
+- Code-Optimierung
+- Ermöglicht die Angabe des Trennzeichens bei einer .txt--Export-Datei aus ADELE (Tabstopp/Semikolon)
+-----------------
+V 1.5 (benötigt config.xml-Version 1.2 und höher)
+- Kompatiblität zu dem Datenexport des IT.NRW-Dienstes
+- Ergänzt fehlende Seminar-Angaben anhand der Seminarnummern (Spalte Seminar aus dem Datenexport des IT.NRW-Dienstes) (aktuell nur ZfsL Bielefeld)
+- füllt fehlende vorangestellte 0 bei 10stelligen IdentNr auf
+- ermöglicht das Verwenden der ADELE-ID oder der IdentNr als primären Schlüssel in LOGINEO 
+-----------------
+V 1.4 (benötigt config.xml-Version 1.1 und höher)
+- Ergänzung eines Lehramtes (24)
+-----------------
+V 1.3 (benötigt config.xml-Version 1.1 und höher)
+- Hinzufügen des Fachbereichs Seminar_LEHRAMT (z.B. Seminar_SF)
+-----------------
+V 1.2 (benötigt config.xml-Version 1.1 und höher)
+- Korrektur der Gruppe: LAA_JAHRGANG (z.B. LAA_BK_2022-05) (Tausch von Monat und Jahr)
+-----------------
+V 1.1 (benötigt config.xml-Version 1.1 und höher)
+- Auswahl über die Config-Datei, welche Gruppen angelegt werden sollen
+- Ergänzung der Gruppe: LAA_JAHRGANG (z.B. LAA_BK_05-2022)
+- kleinere Fehlerbehebungen
+-----------------
+V 1.0
+- automatische Generierung einer Excel-Liste, die direkt in Logineo importiert werden kann.
+- automatisches Zusammenfügen von Namenszusätzen und Nachnamen
+- automatische Generierung und Zuordnung der Personen zu vorgegebenen Gruppen: LAA, LAA_LEHRAMT (z.B. LAA_G)
+- automatische Generierung einer Excel-Liste mit fehlerhaften LAA-Einträgen (insb. fehlende IdentNr.)
+
+
+LAA_ADELE-zu-LOGINEO-Import-Konverter - config.xml - CHANGELOG
+-----------------
+V 1.1 (benötigt ab Konverter-Version 1.1)
+- Auswahlmöglichkeit, ob die Gruppen LAA_LEHRAMT und LAA_LEHRAMT_JAHRGANG automatisch erstellt werden sollen
+-----------------
+V 1.0 (benötigt ab Konverter-Version 1.0)
+- Anpassung des Dateinamens der Import-Datei
+-----------------
