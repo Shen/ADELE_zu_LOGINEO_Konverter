@@ -1,10 +1,24 @@
 <config>
-<!-- Version 1.3 -->
+<!-- Version 1.4 -->
 
 <!-- Einstellungen -->
-	<txtfile>Referendare-2022-10-24.txt</txtfile> <!-- Geben Sie den Namen der zu importierenden .txt-Datei an (z. B. referendare.txt). Die Datei muss im Hauptverzeichnis des Scripts liegen. -->
-	<txtfile_delimiter>;</txtfile_delimiter> <!-- Welches Trennzeichen wird in der txt-Ausgabedatei von ADELE verwendet? \t = Tabulator, ; = Semikolon -->
-	<primary_key>AdeleID</primary_key> <!-- Soll die ADELE-ID oder die IdentNr als primärer Identifikationsschlüssel in LOGINEO genutzt werden? (AdeleID/IdentNr) EMPFEHLUNG: AdeleID -->
-	<gruppe_laa_lehramt>ja</gruppe_laa_lehramt> <!-- Soll für jede Person die Gruppe LAA_LEHRAMT (z.B. LAA_GyGe) angelegt werden? (ja/nein) EMPFEHLUNG: ja-->
-	<gruppe_laa_lehramt_jg>ja</gruppe_laa_lehramt_jg> <!-- Soll für jede Person die Gruppe LAA_LEHRAMT_JAHRGANG (z.B. LAA_BK_05-2022) angelegt werden? (ja/nein) EMPFEHLUNG: ja -->
+
+	<!-- Geben Sie den Namen der zu importierenden .txt-Datei an (z. B. referendare.txt). 
+	Die Datei muss im Hauptverzeichnis des Scripts liegen. -->
+	<txtfile>Beispiel_LAA_ADELE_Erstexport.txt</txtfile>		
+	<!-- Welches Trennzeichen wird in der txt-Ausgabedatei von ADELE verwendet?
+	"\t" = Tabulator oder ";"" = Semikolon -->
+	<txtfile_delimiter>\t</txtfile_delimiter>
+	<!-- Soll die ADELE-ID oder die IdentNr als primärer Identifikationsschlüssel in LOGINEO 
+	genutzt werden? ("AdeleID"/"IdentNr") EMPFEHLUNG: AdeleID -->
+	<primary_key>AdeleID</primary_key>
+	<!-- Soll für jede Person die Gruppe LAA_LEHRAMT (z.B. LAA_GyGe) angelegt werden? 
+	("ja"/"nein") EMPFEHLUNG: ja -->			
+	<gruppe_laa_lehramt>ja</gruppe_laa_lehramt> 	
+	<!-- Soll für jede Person die Gruppe LAA_LEHRAMT_JAHRGANG (z.B. LAA_BK_05-2022) angelegt werden? 
+	("ja"/"nein") EMPFEHLUNG: ja -->	
+	<gruppe_laa_lehramt_jg>ja</gruppe_laa_lehramt_jg>
+	<!-- Sollen für jede Person die Gruppen LAA_SEMINAR_FACHLEITUNG (z.B. LAA_SEMINAR_MUELLER) angelegt werden? 
+	("ja"/"nein") EMPFEHLUNG: ja -->
+	<gruppe_laa_seminare>ja</gruppe_laa_seminare>
 </config>

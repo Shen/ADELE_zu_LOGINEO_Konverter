@@ -63,12 +63,14 @@ config_gruppe_laa_lehramt = config_xmlsoup.find(
     'gruppe_laa_lehramt').string  # group LAA_LEHRAMT
 config_gruppe_laa_lehramt_jg = config_xmlsoup.find(
     'gruppe_laa_lehramt_jg').string  # group LAA_LEHRAMT_JAHRGANG
+config_gruppe_laa_seminare = config_xmlsoup.find(
+    'gruppe_laa_seminare').string  # groups Seminare
 
 # logineo Info-Text
 print("")
 print("###################################################################################")
 print("# Inoffizielles LAA-ADELE-Export zu LOGINEO NRW-Import-Tool für ZfsL-Instanzen    #")
-print("# VERSION: 1.6                                                                    #")
+print("# VERSION: 1.7                                                                   #")
 print("# Dieses Tool erstellt aus einem unveränderten LAA-ADELE-.txt/xlsx-Export         #")
 print("# eine Exceldatei (.xlsx), für den LOGINEO NRW-LAA-Nutzerdatenimport.             #")
 print("#                                                                                 #")
@@ -121,7 +123,7 @@ df1.fillna('', inplace=True)
 
 # create dataframes
 data = {"AdeleID": [], "IdentNr": [], "Nachname": [], "Vorname": [],
-        "Typ": [], "Seminar": [], "Lehramt": [], "Jahrgang": []}
+        "Typ": [], "Seminar": [], "Lehramt": [], "Jahrgang": [], "Kernseminar": []}
 
 
 datafail = {"AdeleID": [], "IdentNr": [], "Nachname": [],
@@ -346,6 +348,15 @@ def add_jahrgang(source, target):
     else:
         target['Jahrgang'].append('')
 
+def add_kernseminar(source, target):
+    """
+    Reads Hsem/Hsem_Leiter and adds it to dataset
+    column: Kernseminar
+    """
+    if 'HSem' in source and source['HSem'] != "" and 'HSem_Leiter' in source and ['HSem_Leiter'] != "":
+        target['Kernseminar'].append('Seminar_'+str(source['HSem'])+'_'+str(source['HSem_Leiter']))
+    else:
+        target['Kernseminar'].append('')
 
 # Fill dataframes
 for i, j in df1.iterrows():
@@ -358,15 +369,14 @@ for i, j in df1.iterrows():
             add_vorname(df1.iloc[i], data)
             add_status("LAA", data)
             add_seminar(df1.iloc[i], data)
-
             if config_gruppe_laa_lehramt == 'ja':
                 add_seminar(df1.iloc[i], data)
-
             if config_gruppe_laa_lehramt == 'ja':
                 add_lehramt(df1.iloc[i], data)
-
             if config_gruppe_laa_lehramt_jg == 'ja':
                 add_jahrgang(df1.iloc[i], data)
+            if config_gruppe_laa_seminare == 'ja':
+                add_kernseminar(df1.iloc[i], data)                
 
         else:
             add_identnr(df1.iloc[i], datafail)
@@ -389,6 +399,8 @@ for i, j in df1.iterrows():
                 add_lehramt(df1.iloc[i], data)
             if config_gruppe_laa_lehramt_jg == 'ja':
                 add_jahrgang(df1.iloc[i], data)
+            if config_gruppe_laa_seminare == 'ja':
+                add_kernseminar(df1.iloc[i], data)
         else:
             add_adeleid(df1.iloc[i], datafail)
             add_identnr(df1.iloc[i], datafail)
@@ -407,7 +419,7 @@ for i, j in df1.iterrows():
 
 # safe results in new dataframes
 df2 = pd.DataFrame(data, columns=[
-                   'AdeleID', 'IdentNr', 'Nachname', 'Vorname', 'Typ', 'Seminar', 'Lehramt', 'Jahrgang'])
+                   'AdeleID', 'IdentNr', 'Nachname', 'Vorname', 'Typ', 'Seminar', 'Lehramt', 'Jahrgang', 'Kernseminar'])
 df3 = pd.DataFrame(datafail, columns=[
                    'AdeleID', 'IdentNr', 'Nachname', 'Vorname', 'Typ', 'Lehramt'])
 
