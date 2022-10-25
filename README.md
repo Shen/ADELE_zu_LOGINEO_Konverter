@@ -26,7 +26,7 @@ __Disclaimer__
 Ich übernehme keinerlei Haftung für die Verwendung dieses Programms. Es wurde nach bestem Wissen und Gewissen programmiert und soll die Arbeit mit LOGINEO NRW im Zusammenspiel mit ADELE erleichtern.
 
 # Anleitung (Windows)
-* Laden Sie sich unter https://github.com/Shen/ADELE_to_LOGINEO/releases die aktuelle Version des Scripts herunter.
+* Laden Sie sich unter https://github.com/Shen/ADELE_zu_LOGINEO_Konverter/releases die aktuelle Version des Scripts herunter.
 * Entpacken Sie die Datei in einem Verzeichnis Ihrer Wahl.
 * Kopieren Sie Ihre in ADELE erstelle Referendare.txt-Datei in das soeben erstellte Verzeichnis. Wichtig ist, dass die Datei mit der .exe-Datei des Scripts in einem Verzeichnis liegt.
 * Öffnen Sie die __config.xml__ mit einem Editor wie zum Beispiel Notepad++ (https://notepad-plus-plus.org/downloads/). Sie werden zumindest den Dateinamen ändern müssen. Schauen Sie auch, ob Ihre ADELE-txt-Datei mit Tabstopps oder mit Semikolon getrennt ist und passen Sie auch dies in der config.xml an. Speichern Sie abschließend die Datei.
