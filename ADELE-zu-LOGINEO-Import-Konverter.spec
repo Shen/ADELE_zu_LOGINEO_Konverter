@@ -4,7 +4,7 @@
 block_cipher = None
 
 
-a = Analysis(['LAA-ADELE-zu-LOGINEO-Import-Konverter.py'],
+a = Analysis(['ADELE-zu-LOGINEO-Import-Konverter.py'],
              pathex=[],
              binaries=[],
              datas=[],
@@ -26,7 +26,7 @@ exe = EXE(pyz,
           a.zipfiles,
           a.datas,  
           [],
-          name='LAA-ADELE-zu-LOGINEO-Import-Konverter',
+          name='ADELE-zu-LOGINEO-Import-Konverter',
           debug=False,
           bootloader_ignore_signals=False,
           strip=False,
