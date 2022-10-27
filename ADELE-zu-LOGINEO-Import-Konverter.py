@@ -6,6 +6,19 @@ from datetime import datetime
 from bs4 import BeautifulSoup
 import codecs
 import re
+import traceback
+import logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
+# If set DEBUG = True, Error-Msg will be visible
+DEBUG = False
+def debug():
+    if DEBUG == True:
+        traceback.print_last()
+
+
+        
 
 # This tool imports ADELE-txt-exports and refactors it for LOGINEO NRW Import.
 
@@ -47,9 +60,18 @@ else:
     # print("Executable is run in normal Python environment, appdir set to: " + appdir) # for debug
 
 # read config from xml file
-configfile = codecs.open(os.path.join(appdir, 'config.xml'), mode='r', encoding='utf-8')
-config = configfile.read()
-configfile.close()
+try:
+    configfile = codecs.open(os.path.join(appdir, 'config.xml'), mode='r', encoding='utf-8')
+    config = configfile.read()
+    configfile.close()
+except Exception:
+    print("FEHLER!")
+    print("Die config.xml wurde nicht gefunden.")
+    print("Bitte prüfen Sie, ob sich die config.xml im selben Verzeichnis befindet, wie die Script-Datei.")
+    debug()
+    input("\nDrücken Sie eine beliebige Taste, um zu bestätigen und den Prozess zu beenden.")
+    debug()
+    sys.exit(1)
 
 # load config values into variables
 config_xmlsoup = BeautifulSoup(config, "html.parser")  # parse
@@ -68,7 +90,7 @@ config_gruppe_laa_seminare = config_xmlsoup.find(
 print("")
 print("###################################################################################")
 print("# Inoffizielles LAA-ADELE-Export zu LOGINEO NRW-Import-Tool für ZfsL-Instanzen    #")
-print("# VERSION: 1.7                                                                   #")
+print("# VERSION: 1.8                                                                    #")
 print("# Dieses Tool erstellt aus einem unveränderten LAA-ADELE-.txt/xlsx-Export         #")
 print("# eine Exceldatei (.xlsx), für den LOGINEO NRW-LAA-Nutzerdatenimport.             #")
 print("#                                                                                 #")
@@ -101,7 +123,7 @@ if not os.path.isfile(config_txtfile):
     print("FEHLER!")
     print("Die txt-Datei (" + config_txtfile + "), die Sie in der config.xml eingetragen haben, existiert nicht. Bitte speichern Sie die Datei '" +
           config_txtfile + "' im Hauptverzeichnis des Scripts oder bearbeiten Sie die config.xml")
-    input("Drücken Sie eine beliebige Taste, um zu bestätigen und den Prozess zu beenden.")
+    input("\nDrücken Sie eine beliebige Taste, um zu bestätigen und den Prozess zu beenden.")
     sys.exit(1)
 
 # import user-ADELE-Export-file
@@ -109,16 +131,17 @@ if config_txtfile.endswith('.xls') or config_txtfile.endswith('.xlsx'):
     df1 = pd.read_excel(config_txtfile, dtype=str)
 elif config_txtfile.endswith('.txt'):
     df1 = pd.read_table(
-        config_txtfile, sep=config_txtfile_delimiter, encoding='mbcs', engine='python')
+    config_txtfile, sep=config_txtfile_delimiter, encoding='mbcs', engine='python')
 else:
-    print("FEHLER!")
+    print("FEHLER! FEHLER! FEHLER!")
     print("Die Datei (" + config_txtfile +
-          "), die Sie in der config.xml eingetragen haben, konnte nicht eingelesen werden.")
-    input("Drücken Sie eine beliebige Taste, um zu bestätigen und den Prozess zu beenden.")
+    "), die Sie in der config.xml eingetragen haben, hat kein zulässiges Dateiformat.")
+    print("Zulässig sind Dateien mit den Endungen: .txt /.xls /.xlsx")
+    input("\nDrücken Sie eine beliebige Taste, um zu bestätigen und den Prozess zu beenden.")
     sys.exit(1)
 
 df1.fillna('', inplace=True)
-print(df1)
+
 # create dataframes
 data = {"AdeleID": [], "IdentNr": [], "Nachname": [], "Vorname": [],
         "Typ": [], "Seminar": [], "Lehramt": [], "Jahrgang": [], "Kernseminar": [], 
@@ -183,16 +206,28 @@ def rmspaces(string):
     """ Replace spaces with underscores"""
     return re.sub('\s+', '_', string)
 
+def read_column(source, column, datatype):
+    """ Reads the content of a column """
+    try:
+        value = datatype(source[column])
+    except:
+        return False
+    else:
+        return value
+
+
+def append_to_dataset(target, key, value, datatype):
+    """Adds source to dataset"""
+    target[key].append(datatype(value))
+
 
 def add_adeleid(source, target):
     """
     Reads ADELE-ID and adds it to dataset
     column: AdeleID
     """
-    if 'Nr' in source and source['Nr'] != "":
-        target['AdeleID'].append(str(source['Nr']))
-    else:
-        target['AdeleID'].append('AdeleID fehlt')
+    value = read_column(source, 'Nr', str)
+    append_to_dataset(target, 'AdeleID', value, int)
 
 
 def add_identnr(source, target):
@@ -200,13 +235,14 @@ def add_identnr(source, target):
     Reads IdentNr and adds it to dataset
     column: IdentNr
     """
-    if 'Identnummer' in source and (source['Identnummer']) != '' and len(str(source['Identnummer'])) > 9:
-        if len(source['Identnummer']) == 10:
-            target['IdentNr'].append("0" + str(source['Identnummer']))
+    value = read_column(source, 'Identnummer', str)
+    if len(value) > 9:
+        if len(value) == 10:
+            append_to_dataset(target, 'IdentNr', "0" + value, str)
         else:
-            target['IdentNr'].append(str(source['Identnummer']))
+            append_to_dataset(target, 'IdentNr', value, str)
     else:
-        target['IdentNr'].append('IdentNr fehlt')
+        append_to_dataset(target, 'IdentNr', 'IdentNr fehlt', str)
 
 
 def add_nachname(source, target):
@@ -214,15 +250,17 @@ def add_nachname(source, target):
     Reads lastname and adds it to dataset
     column: Nachname
     """
-    if 'Name' in source:
-        target['Nachname'].append(str(source['Name']))
-    elif 'Familienname' in source and source['Familienname'] != '' and 'Namensvorsatz' in source and source['Namensvorsatz'] != '':
-        target['Nachname'].append(
-            str(source['Namensvorsatz']) + ' ' + str(source['Familienname']))
-    elif 'Familienname' in source and source['Familienname'] != '':
-        target['Nachname'].append(source['Familienname'])
+    nachname = read_column(source, 'Name', str)
+    familienname = read_column(source, 'Familienname', str)
+    namensvorsatz = read_column(source, 'Namensvorsatz', str)
+    if nachname != False:
+        append_to_dataset(target, 'Nachname', nachname, str)
+    elif familienname != False and namensvorsatz != False:
+        append_to_dataset(target, 'Nachname', namensvorsatz + ' ' + familienname, str)
+    elif familienname != False and namensvorsatz == False:
+        append_to_dataset(target, 'Nachname', familienname, str)
     else:
-        target['Nachname'].append('FEHLER')
+        append_to_dataset(target, 'Nachname', "FEHLER", str)
 
 
 def add_vorname(source, target):
@@ -230,10 +268,8 @@ def add_vorname(source, target):
     Reads surname and adds it to dataset
     column: Vorname
     """
-    if (source['Vorname']) != '':
-        target['Vorname'].append(source['Vorname'])
-    else:
-        target['Vorname'].append('FEHLER')
+    value = read_column(source, 'Vorname', str)
+    append_to_dataset(target, 'Vorname', value, str)    
 
 
 def add_status(source, target):
@@ -241,7 +277,8 @@ def add_status(source, target):
     Adds status (LAA/SAB) to dataset
     column: Typ
     """
-    target['Typ'].append(source)
+    value = source
+    append_to_dataset(target, 'Typ', value, str)     
 
 
 def add_seminar(source, target):
@@ -249,26 +286,27 @@ def add_seminar(source, target):
     Reads Seminar and adds Seminar_Lehramt to dataset
     column: Seminar
     """
-    if 'Lehramt' in source and source['Lehramt'] != "":
-        if int(source['Lehramt']) in lehraemter:
-            target['Seminar'].append(
-                'Seminar_'+str(lehraemter[int(source['Lehramt'])]))
+    lehramt = read_column(source, 'Lehramt', str)
+    lehramt1 = read_column(source, 'Lehramt1', str)
+    seminar = read_column(source, 'Seminar', str)
+    
+    if lehramt != False and lehramt !="":
+        if int(float(lehramt)) in lehraemter and lehramt !="":
+           append_to_dataset(target, 'Seminar', "Seminar_" + lehraemter[int(float(lehramt))], str)
         else:
-            target['Seminar'].append('')
-    elif 'Lehramt1' in source and source['Lehramt1'] != "":
-        if int(source['Lehramt1']) in lehraemter:
-            target['Seminar'].append(
-                'Seminar_'+str(lehraemter[int(source['Lehramt1'])]))
+            append_to_dataset(target, 'Seminar', "Seminar_???", str)
+    elif lehramt1 != False and lehramt1 !="":
+        if int(float(lehramt1)) in lehraemter:
+           append_to_dataset(target, 'Seminar', "Seminar_" + lehraemter[int(float(lehramt1))], str)
         else:
-            target['Seminar'].append('')
-    elif 'Seminar' in source and source['Seminar'] != "":
-        if source['Seminar'] in seminare:
-            target['Seminar'].append(
-                'Seminar_'+str(seminare[source['Seminar']]))
+            append_to_dataset(target, 'Seminar', "Seminar_???", str)
+    elif seminar != False and seminar !="":
+        if int(float(seminar)) in seminare:
+             append_to_dataset(target, 'Seminar', 'Seminar_' + seminare[int(float(seminar))], str)
         else:
-            target['Seminar'].append('')
+             append_to_dataset(target, 'Seminar', "Seminar_???", str)
     else:
-        target['Seminar'].append('')
+        append_to_dataset(target, 'Seminar', "Seminar_???", str)
 
 
 def add_lehramt(source, target):
@@ -276,82 +314,98 @@ def add_lehramt(source, target):
     Reads Lehramt and adds LAA_Lehramt it to dataset
     column: Lehramt
     """
-    if 'Lehramt' in source and source['Lehramt'] != "":
-        if int(source['Lehramt']) in lehraemter:
-            target['Lehramt'].append('LAA_'+str(lehraemter[int(source['Lehramt'])]))
-        else:
-            target['Lehramt'].append('')
-    elif 'Lehramt1' in source and source['Lehramt1'] != "":
-        if int(source['Lehramt1']) in lehraemter:
-            target['Lehramt'].append(
-                'LAA_'+str(lehraemter[int(source['Lehramt1'])]))
-        else:
-            target['Lehramt'].append('')
-    elif 'Seminar' in source and source['Seminar'] != "":
-        if source['Seminar'] in seminare:
-            target['Lehramt'].append('LAA_'+str(seminare[source['Seminar']]))
-        else:
-            target['Lehramt'].append('')
-    else:
-        target['Lehramt'].append('')
+    lehramt = read_column(source, 'Lehramt', str)
+    lehramt1 = read_column(source, 'Lehramt1', str)
+    seminar = read_column(source, 'Seminar', str)
 
+    if lehramt != False and lehramt !="":
+        if int(float(lehramt)) in lehraemter:
+           append_to_dataset(target, 'Lehramt', "LAA_" + lehraemter[int(float(lehramt))], str)
+        else:
+            append_to_dataset(target, 'Lehramt', "LAA_???", str)
+    elif lehramt1 != False and lehramt1 !="":
+        if int(float(lehramt1)) in lehraemter:
+           append_to_dataset(target, 'Lehramt', "LAA_" + lehraemter[int(float(lehramt1))], str)
+        else:
+            append_to_dataset(target, 'Lehramt', "LAA_???", str)
+    elif seminar != False and seminar != "":
+        if int(float(seminar)) in seminare:
+             append_to_dataset(target, 'Lehramt', 'LAA_' + seminare[int(float(seminar))], str)
+        else:
+             append_to_dataset(target, 'Lehramt', "LAA_???", str)
+    else:
+        append_to_dataset(target, 'Lehramt', "LAA_???", str)
+
+
+def split_year_short(string):
+    """Splits year from date in format YYYY-MM-DD"""
+    return string[-4:]
+
+def split_year_long_xls(string):
+    """Splits year from date in format YYYY-MM-DD 00:00:00 in xls/xlsx-files"""
+    return string[-19:-15]
+
+def split_year_long_txt(string):
+    """Splits year from date in format YYYY-MM-DD 00:00:00 in txt-files"""
+    return string[-13:-9]
+
+def split_month_short(string):
+    """Splits month from date in format YYYY-MM-DD"""
+    return str(string[-7:-5])
+
+def split_month_long_xls(string):
+    """Splits month from date in format YYYY-MM-DD 00:00:00 in xls/xlsx-files"""
+    return string[-14:-12]
+
+def split_month_long_txt(string):
+    """Splits month from date in format YYYY-MM-DD 00:00:00 in txt-files"""
+    return string[-16:-14]
 
 def add_jahrgang(source, target):
     """
     Reads Jahrgang and adds it LAA_Seminar_Jahrgang dataset
     column: Jahrgang
     """
-    if 'Lehramt' in source and source['Lehramt'] != "":
-        if int(source['Lehramt']) in lehraemter and source['VD1_von'] != '':
-            if len(source['VD1_von']) == 10:
-                target['Jahrgang'].append('LAA_'+str(lehraemter[int(source['Lehramt'])])+'_'+(
-                str(source['VD1_von'])[-4:])+'-'+(str(source['VD1_von'])[-7:-5]))
-            elif len(source['VD1_von']) == 19:
-                if config_txtfile.endswith('.xls') or config_txtfile.endswith('.xlsx'):
-                    target['Jahrgang'].append('LAA_'+str(lehraemter[int(source['Lehramt'])])+'_'+(
-                    str(source['VD1_von'])[-19:-15])+'-'+(str(source['VD1_von'])[-14:-12]))
-                elif config_txtfile.endswith('.txt'):
-                    target['Jahrgang'].append('LAA_'+str(lehraemter[int(source['Lehramt'])])+'_'+(
-                    str(source['VD1_von'])[-13:-9])+'-'+(str(source['VD1_von'])[-16:-14]))
-                else:
-                    target['Jahrgang'].append('')
-            else:
-                target['Jahrgang'].append('')
-    # für IT-NRW-Dateien
-    elif 'Lehramt1' in source and source['Lehramt1'] != "":
-        if int(source['Lehramt1']) in lehraemter and source['VD1_von'] != '':
-            if len(str(source['VD1_von'])) == 10:
-                target['Jahrgang'].append('LAA_'+str(lehraemter[int(source['Lehramt1'])])+'_'+(
-                    str(source['VD1_von'])[-4:])+'-'+(str(source['VD1_von'])[-7:-5]))
-                if len(str(source['VD1_von'])) == 19:
-                    if config_txtfile.endswith('.xls') or config_txtfile.endswith('.xlsx'):
-                        target['Jahrgang'].append('LAA_'+str(lehraemter[int(source['Lehramt1'])])+'_'+(
-                        str(source['VD1_von'])[-19:-15])+'-'+(str(source['VD1_von'])[-14:-12]))
-                    elif config_txtfile.endswith('.txt'):
-                        target['Jahrgang'].append('LAA_'+str(lehraemter[int(source['Lehramt1'])])+'_'+(
-                        str(source['VD1_von'])[-13:-9])+'-'+(str(source['VD1_von'])[-16:-14]))
-                    else:
-                        target['Jahrgang'].append('')
-                else:
-                    target['Jahrgang'].append('')
-    elif 'Seminar' in source and source['Seminar'] != "":
-        if source['Seminar'] in seminare and source['VD1_von'] != '':
-            if len(str(source['VD1_von'])) == 10:
-                target['Jahrgang'].append('LAA_'+str(seminare[source['Seminar']])+'_'+(
-                str(source['VD1_von'])[-4:])+'-'+(str(source['VD1_von'])[-7:-5]))
-            if len(str(source['VD1_von'])) == 19:
-                #if config_txtfile.endswith('.xls') or config_txtfile.endswith('.xlsx'):
-                    #target['Jahrgang'].append('LAA_'+str(seminare[source['Seminar']])+'_'+(
-                        #str(source['VD1_von'])[-19:-15])+'-'+(str(source['VD1_von'])[-14:-12]))
-                #elif config_txtfile.endswith('.txt'):
-                target['Jahrgang'].append('LAA_'+str(seminare[source['Seminar']])+'_'+(
-                str(source['VD1_von'])[-13:-9])+'-'+(str(source['VD1_von'])[-16:-14]))
-                #else:
-                    #target['Jahrgang'].append('')
-            else:
-                target['Jahrgang'].append('')
+    lehramt = read_column(source, 'Lehramt', str)
+    lehramt1 = read_column(source, 'Lehramt1', str)
+    seminar = read_column(source, 'Seminar', str)   
+    vd1_von = read_column(source, 'VD1_von', str)
+    
+    jahrgang = "LAA_"
+    if lehramt != False and lehramt != '':
+        if int(float(lehramt)) in lehraemter:
+            jahrgang += str(lehraemter[int(float(lehramt))]) + "_"
+        else:
+            jahrgang += "???_"
+    elif lehramt1 != False and lehramt1 !="":
+        if int(float(lehramt1)) in lehraemter:
+            jahrgang += str(lehraemter[int(float(lehramt1))]) + "_"
+        else:
+            jahrgang += "???_"
+    elif seminar != False and seminar !="":
+        if int(float(seminar)) in seminare:
+            jahrgang += str(seminare[int(float(seminar))]) + "_"
+        else:
+            jahrgang += "???_"
     else:
-        target['Jahrgang'].append('')
+        jahrgang += "???_"
+    
+    if vd1_von != False:
+        if len(vd1_von) == 10:
+            start_date_short = split_year_short(vd1_von) + '-' + split_month_short(vd1_von)
+            jahrgang += start_date_short
+        elif len(source['VD1_von']) == 19:
+            if config_txtfile.endswith('.xls') or config_txtfile.endswith('.xlsx'):
+                start_date_long_xls = split_year_long_xls(vd1_von) + '-' + split_month_long_xls(vd1_von)
+                jahrgang +=  start_date_long_xls
+            elif config_txtfile.endswith('.txt'):
+                start_date_long_txt = split_year_long_txt(vd1_von) + '-' + split_month_long_txt(vd1_von)
+                jahrgang +=  start_date_long_txt
+    else:
+        jahrgang +=  "???"
+       
+    append_to_dataset(target, 'Jahrgang', jahrgang, str)
+
 
 def add_kernseminar(source, target):
     """
@@ -388,57 +442,93 @@ for i, j in df1.iterrows():
     # adding a new row (be careful to ensure every column gets another value)
     if config_primary_key == 'IdentNr':
         if (df1.iloc[i]['Identnummer']) != '' and len(str(df1.iloc[i]['Identnummer'])) > 9:
-            add_identnr(df1.iloc[i], data)
-            add_adeleid(df1.iloc[i], data)
-            add_nachname(df1.iloc[i], data)
-            add_vorname(df1.iloc[i], data)
-            add_status("LAA", data)
-            if config_gruppe_laa_lehramt == 'ja':
-                add_seminar(df1.iloc[i], data)
-            if config_gruppe_laa_lehramt == 'ja':
-                add_lehramt(df1.iloc[i], data)
-            if config_gruppe_laa_lehramt_jg == 'ja':
-                add_jahrgang(df1.iloc[i], data)
-            if config_gruppe_laa_seminare == 'ja':
-                add_kernseminar(df1.iloc[i], data)
-                add_fachseminar_1(df1.iloc[i], data)
-                add_fachseminar_2(df1.iloc[i], data)                              
+            try:
+                add_identnr(df1.iloc[i], data)
+                add_adeleid(df1.iloc[i], data)
+                add_nachname(df1.iloc[i], data)
+                add_vorname(df1.iloc[i], data)
+                add_status("LAA", data)
+                if config_gruppe_laa_lehramt == 'ja':
+                    add_seminar(df1.iloc[i], data)
+                if config_gruppe_laa_lehramt == 'ja':
+                    add_lehramt(df1.iloc[i], data)
+                if config_gruppe_laa_lehramt_jg == 'ja':
+                    add_jahrgang(df1.iloc[i], data)
+                if config_gruppe_laa_seminare == 'ja':
+                    add_kernseminar(df1.iloc[i], data)
+                    add_fachseminar_1(df1.iloc[i], data)
+                    add_fachseminar_2(df1.iloc[i], data)
+            except Exception:
+                print("")
+                print("\nFEHLER - FEHLER - FEHLER. (#9.1)")
+                print("Bei der Ausführung ist etwas schiefgelaufen.")
+                print("Überprüfen Sie die Einstellungen (config.xml) und die Quell-Datei.")
+                input("\nDrücken Sie eine beliebige Taste, um das Programm zu beenden.")
+                debug()
+                sys.exit(1)                                           
 
         else:
-            add_identnr(df1.iloc[i], datafail)
-            add_adeleid(df1.iloc[i], datafail)
-            add_nachname(df1.iloc[i], datafail)
-            add_vorname(df1.iloc[i], datafail)
-            add_status("LAA", datafail)
-            add_lehramt(df1.iloc[i], datafail)
+            try:
+                add_identnr(df1.iloc[i], datafail)
+                add_adeleid(df1.iloc[i], datafail)
+                add_nachname(df1.iloc[i], datafail)
+                add_vorname(df1.iloc[i], datafail)
+                add_status("LAA", datafail)
+                add_lehramt(df1.iloc[i], datafail)
+            except Exception:
+                print("")
+                print("\nFEHLER - FEHLER - FEHLER. (#9.2)")
+                print("Bei der Ausführung ist etwas schiefgelaufen.")
+                print("Überprüfen Sie die Einstellungen (config.xml) und die Quell-Datei.")
+                input("\nDrücken Sie eine beliebige Taste, um das Programm zu beenden.")
+                debug()
+                sys.exit(1)              
 
     elif config_primary_key == 'AdeleID':
         if 'Nr' in df1.iloc[i] and df1.iloc[i]['Nr'] != "":
-            add_adeleid(df1.iloc[i], data)
-            add_identnr(df1.iloc[i], data)
-            add_nachname(df1.iloc[i], data)
-            add_vorname(df1.iloc[i], data)
-            add_status("LAA", data)
-            if config_gruppe_laa_lehramt == 'ja':
-                add_seminar(df1.iloc[i], data)
-            if config_gruppe_laa_lehramt == 'ja':
-                add_lehramt(df1.iloc[i], data)
-            if config_gruppe_laa_lehramt_jg == 'ja':
-                add_jahrgang(df1.iloc[i], data)
-            if config_gruppe_laa_seminare == 'ja':
-                add_kernseminar(df1.iloc[i], data)
-                add_fachseminar_1(df1.iloc[i], data)
-                add_fachseminar_2(df1.iloc[i], data)
+            try:
+                add_adeleid(df1.iloc[i], data)
+                add_identnr(df1.iloc[i], data)
+                add_nachname(df1.iloc[i], data)
+                add_vorname(df1.iloc[i], data)
+                add_status("LAA", data)
+                if config_gruppe_laa_lehramt == 'ja':
+                    add_seminar(df1.iloc[i], data)
+                if config_gruppe_laa_lehramt == 'ja':
+                    add_lehramt(df1.iloc[i], data)
+                if config_gruppe_laa_lehramt_jg == 'ja':
+                    add_jahrgang(df1.iloc[i], data)
+                if config_gruppe_laa_seminare == 'ja':
+                    add_kernseminar(df1.iloc[i], data)
+                    add_fachseminar_1(df1.iloc[i], data)
+                    add_fachseminar_2(df1.iloc[i], data)
+            except Exception:
+                print("")
+                print("\nFEHLER - FEHLER - FEHLER. (#9.3)")
+                print("Bei der Ausführung ist etwas schiefgelaufen.")
+                print("Überprüfen Sie die Einstellungen (config.xml) und die Quell-Datei.")
+                input("\nDrücken Sie eine beliebige Taste, um das Programm zu beenden.")
+                debug()
+                sys.exit(1)
         else:
-            add_adeleid(df1.iloc[i], datafail)
-            add_identnr(df1.iloc[i], datafail)
-            add_nachname(df1.iloc[i], datafail)
-            add_vorname(df1.iloc[i], datafail)
-            add_status("LAA", datafail)
-            add_lehramt(df1.iloc[i], datafail)
+            try:
+                add_adeleid(df1.iloc[i], datafail)
+                add_identnr(df1.iloc[i], datafail)
+                add_nachname(df1.iloc[i], datafail)
+                add_vorname(df1.iloc[i], datafail)
+                add_status("LAA", datafail)
+                add_lehramt(df1.iloc[i], datafail)
+            except Exception:
+                print("")
+                print("\nFEHLER - FEHLER - FEHLER. (#9.4)")
+                print("Bei der Ausführung ist etwas schiefgelaufen.")
+                print("Überprüfen Sie die Einstellungen (config.xml) und die Quell-Datei.")
+                input("\nDrücken Sie eine beliebige Taste, um das Programm zu beenden.")
+                debug()
+                sys.exit(1)
     else:
         print("")
-        print("\nFEHLER - FEHLER - FEHLER.")
+        print("\nFEHLER - FEHLER - FEHLER. (#9.5)")
         print("\nDie Angaben zum Primary Key in der config.xml sind falsch.")
         print("Bitte überprüfen Sie die Einstellungen.")
         input("\nDrücken Sie eine beliebige Taste, um das Programm zu beenden.")
