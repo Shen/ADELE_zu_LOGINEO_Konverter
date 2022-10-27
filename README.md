@@ -13,13 +13,17 @@ Das Script beschränkt die Ausgabe auf die notwendigen Spalten und fügt zudem i
 Die Excel-Ausgabedatei kann problemlos im Admin-Bereich von LOGINEO NRW importiert werden.
 ![import-logineonrw](https://user-images.githubusercontent.com/81589/197849765-faecbafe-717a-494c-9d84-67bc4b28852d.png)
 
+__Funktionen__
+* Automatische Zusammenführung vorhandener Namensvorsätze mit dem Nachnamen
+* Automatische Generierung von Gruppen, die in LOGINEO übernommen werden können (Seminarzugehörigkeit, Jahrgang, etc.)
+* Ausgabe einer Excel-Datei, die direkt in LOGINEO importiert werden kann.
 
 __Wichtige Hinweise__
 * Als __Primärschlüssel__ ist unbedingt die __ADELE-ID__ zu empfehlen, da diese immer vorhanden ist. Die IdentNr, die an Schulen als Primärschlüssel vorgesehen ist, fehlt häufig.
 * Das Script kann an Windows-Rechnern über die .exe-Datei ausgeführt werden oder alternativ über das Python-Script.
 
 __Bekannte Probleme__
-* Einige Personengruppen (z. B. Fachlehrer in Ausbildung, EU-Anpassungsgänge) sind keinem Lehramt zugeordnet. Für diese Personen werden keine Gruppen generiert.
+* Einige Personengruppen (z. B. Fachlehrer in Ausbildung, EU-Anpassungsgänge) sind keinem Lehramt zugeordnet. Für diese Personen werden fehlerhafte Gruppen erstellt (z.B. LAA_???_2022-05). Dies muss händisch in der Ausgabe-Excel-Datei korrigiert werden.
 
 __Disclaimer__
 
