@@ -1,4 +1,4 @@
-# Über das ADELE_zu_LOGINEO-Script für Referendare
+# Über das ADELE_zu_LOGINEO-Script (für LAA-Daten)
 
 # Beschreibung
 Das ADELE_zu_LOGINEO-Script konvertiert die txt-Ausgabedatei von ADELE in eine Excel-Datei, die einfach in LOGINEO NRW importiert werden kann.
