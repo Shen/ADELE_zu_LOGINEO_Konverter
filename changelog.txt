@@ -1,8 +1,14 @@
 LAA_ADELE-zu-LOGINEO-Import-Konverter CHANGELOG
 -----------------
+V 1.8 (benötigt config.xml-Version 1.4 und höher)
+- Bei Personen, bei denen das Lehramt fehlt, werden nun auch Gruppen erzeugt, jedoch mit '???' als Platzhalter. Zum Beispiel LAA_???_2020-10
+- Bugfixes
+- Code-Optimierung
+- Error-Handling
+-----------------
 V 1.7 (benötigt config.xml-Version 1.4 und höher)
 - Umbenennung der Beispieldateien
-- Aufräumen der config.xml
+- Neugestaltung der config.xml
 - Hinzufügen der Seminare mit Fachleitungen als Gruppen
 -----------------
 V 1.6 (benötigt config.xml-Version 1.3 und höher)
